@@ -127,18 +127,41 @@ namespace ufo
 
     ExprSet cands;
 
-    // get inv vars
-    ExprVector bvVars;
+    // collect vars/constants by width
+    std::map<unsigned, ExprVector> bvVarsByWidth;
+    std::map<unsigned, ExprVector> bvConstantsByWidth;
+
+
     for (auto & a: tr->srcVars)
     {
-      if (bv::is_bvconst(a)) bvVars.push_back(a);
-      else if (bind::isBoolConst(a)) cands.insert(a);
+      if (bv::is_bvconst(a))
+      {
+        bvVarsByWidth[bv::width(a)].push_back(a);
+      }
+      else if (bind::isBoolConst(a)) {
+        bvConstantsByWidth[bv::width(a)].push_back(a);
+      }
     }
     // test commit
-    for (int i = 0; i < bvVars.size(); i++)
-      for (int j = i + 1; j < bvVars.size(); j++)
-        cands.insert(mk<EQ>(bvVars[i], bvVars[j]));
+    for (auto & width_vars_pair : bvVarsByWidth) {
+      // EQ between vars of the same width :    bv == bv
+      unsigned width = width_vars_pair.first;
+      auto & bvVars = width_vars_pair.second;
+      for (int i = 0; i < bvVars.size(); i++)
+        for (int j = i + 1; j < bvVars.size(); j++)
+          cands.insert(mk<EQ>(bvVars[i], bvVars[j]));
 
+      if (bvConstantsByWidth.find(width) != bvConstantsByWidth.end()) {
+        auto & bvCnsts = bvConstantsByWidth[width];
+         // if there are also constants
+         // why not try v == constant
+        for (int i = 0; i < bvVars.size(); i++)
+          for (int j = i + 1; j < bvCnsts.size(); j++)
+            cands.insert(mk<EQ>(bvVars[i], bvCnsts[j]));
+      }
+    }
+
+    // check for simple candidates, if done we are good
     for (auto & cand : cands)
     {
       if (cc.checkInitiation(cand) &&
@@ -149,6 +172,10 @@ namespace ufo
         return;
       }
     }
+
+    // what's the format to make a constant?
+    
+
   }
 }
 
