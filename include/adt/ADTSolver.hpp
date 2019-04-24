@@ -29,6 +29,7 @@ namespace ufo
     int maxSearchD = 15;
     int maxSameAssm = 5;
     int maxTermDepth = 3;
+    int noCtor = 0;
     int refuteTests = 3;
     int refuteSimpl = 35;
     int timeoutSecs = 10;
@@ -45,6 +46,7 @@ namespace ufo
         {"max-search",  required_argument, NULL, 'D'},
         {"max-same-assm", required_argument, NULL, 'S'},
         {"term-depth", required_argument, NULL, 'd'},
+        {"no-ctor", no_argument, NULL, 'N'},
         {"refute-test", required_argument, NULL, 'R'},
         {"refute-simpl", required_argument, NULL, 's'},
         {"timeout", required_argument, NULL, 'O'},
@@ -89,6 +91,10 @@ namespace ufo
 
           case 'd':
             maxTermDepth = value;
+            break;
+
+          case 'N':
+            noCtor = 1;
             break;
 
           case 'R':
@@ -172,6 +178,7 @@ namespace ufo
     ExprSet vars;
     ExprSet funcs;
     int maxDepth;
+    bool noCtor;
     vector<size_t> depthIdx;
     bool isVarFn(Expr e){
       if (isOpX<FAPP> (e) && e->arity () == 1 && isOpX<FDECL> (e->first())) {
@@ -200,18 +207,19 @@ namespace ufo
     // }
   public:
     map<Expr, ExprVector> allTerms;
-    TermEnumerator(Expr expr, ExprMap _baseCtors, ExprMap _indCtors, int _maxDepth = 3) :
-      baseCtors(_baseCtors), indCtors(_indCtors), maxDepth(_maxDepth)
+    TermEnumerator(Expr expr, ExprMap _baseCtors, ExprMap _indCtors, int _maxDepth = 3, bool _noCtor = false) :
+      baseCtors(_baseCtors), indCtors(_indCtors), maxDepth(_maxDepth), noCtor(_noCtor)
     {
       LOG(1, outs()<<"<term-enum> from expr: "<<*expr<<"\n");
       filter(expr, [this](Expr e){return isVarFn(e);}, inserter(vars, vars.end()));
       filter(expr, [this](Expr e){return isFuncFn(e);}, inserter(funcs, funcs.end()));
 
+      if (!noCtor){
       for(auto p: indCtors)
       {
         if (p.second)
           funcs.insert(p.second);
-      }
+      }}
     }
     void addFunctions(Expr axiom){
       filter(axiom, [this](Expr e){return isFuncFn(e);}, inserter(funcs, funcs.end()));
@@ -240,12 +248,13 @@ namespace ufo
         allTerms[bind::typeOf(v)].push_back(v);
         LOG(5, outs()<<"Variable "<<*v<<" of type: "<<*bind::typeOf(v)<<"\n");
       }
+      if (!noCtor){
       for (auto p: baseCtors)
       {
         if (!p.second || (p.second)->arity() != 2) continue;
         allTerms[p.first].push_back(bind::fapp(p.second));
         LOG(5, outs()<<"Ctor "<<*bind::fapp(p.second)<<" of type: "<<*(p.first)<<"\n");
-      }
+      }}
 
       LOG(5, for (Expr f: funcs) outs()<<"Function "<<*f);
       LOG(5, outs()<<"\n");
@@ -573,19 +582,31 @@ namespace ufo
       return false;
     }
 
-    // this recursive method performs a naive search for a strategy
-
+    
+    // Reduce F(A,B,C ..., X) = F(A,B,C ..., Y) to X = Y
     Expr rewriteTyTy(Expr eq)
     {
       if (!isOpX<EQ>(eq) || eq->arity() != 2) return eq;
       Expr lhs = eq->left();
       Expr rhs = eq->right();
-      if (!isOpX<FAPP>(lhs) || !isOpX<FAPP>(rhs) || (lhs->first() != rhs->first())) return eq;
-      if (lhs->arity() == 2 && (lhs->first()->arg(1) == lhs->first()->arg(2))) {
-        return mk<EQ>(lhs->last(), rhs->last());
-      } // only one argument
+      if (!isOpX<FAPP>(lhs) || !isOpX<FAPP>(rhs) || (lhs->first() != rhs->first()) || lhs->arity() < 2) return eq;
+
+      int cntDiff = 0, diffArg = -1;
+      for (int i = 1; i < lhs->arity(); i++){
+        Expr larg = lhs->arg(i);
+        Expr rarg = rhs->arg(i);
+        if (larg != rarg){
+          cntDiff ++;
+          diffArg = i;
+        }
+      }
+      
+      if (cntDiff == 1 && isIndCtorFn(lhs)) 
+        return mk<EQ>(lhs->arg(diffArg), rhs->arg(diffArg));
       else return eq;
     }
+
+    // this recursive method performs a naive search for a strategy
     bool rewriteAssumptions(Expr subgoal)
     {
       subgoal = replace(subgoal, mk_fn_map(SimplifyAdd0()));
@@ -1009,6 +1030,7 @@ namespace ufo
       for (Expr &v : vars) v = v->first();
       vars.push_back(goalQF);
       Expr newGoal = mknary<FORALL>(vars);
+      if (checkDuplicate(goal, newGoal)) return;
       if (find(candidates.begin(), candidates.end(), newGoal) == candidates.end())
       {
         candidates.push_back(newGoal);
@@ -1161,7 +1183,7 @@ namespace ufo
           ExprSet lhsVars;
           filter(LHS, [this](Expr e){return isVarFn(e);}, inserter(lhsVars, lhsVars.end()));
 
-          TermEnumerator tEnum(LHS, baseConstructors, indConstructors, cfg.maxTermDepth);
+          TermEnumerator tEnum(LHS, baseConstructors, indConstructors, cfg.maxTermDepth, cfg.noCtor);
           // MAYBE collect all functions
           // for (Expr assm : assumptions)
           //   tEnum.addFunctions(assm);
@@ -1236,7 +1258,7 @@ namespace ufo
 
           ExprSet lhsVars;
           filter(LHS, [this](Expr e){return isVarFn(e);}, inserter(lhsVars, lhsVars.end()));
-          TermEnumerator tEnum(LHS, baseConstructors, indConstructors, cfg.maxTermDepth);
+          TermEnumerator tEnum(LHS, baseConstructors, indConstructors, cfg.maxTermDepth, cfg.noCtor);
           tEnum.getTerms();
           ExprVector &tList = tEnum.allTerms[lhsTy];
           int validCnt = tList.size();
@@ -1280,6 +1302,41 @@ namespace ufo
             assert(0 && "unsurported lemma template");
           }
         }else{
+          if (cfg.lemmaTmpl == 3){
+            /* TEMPLATE 3
+             * <???> = <???>
+             */
+             LOG(1, outs()<<" using template 3\n");
+            ExprSet reqVars;
+            filter(goalQF, [this](Expr e){return isVarFn(e);}, inserter(reqVars, reqVars.end()));
+
+            ExprSet reqFns;
+            auto isFuncFn = [](Expr e){return isOpX<FDECL> (e) && e->arity () >= 3;};
+            filter(goalQF, isFuncFn, inserter(reqFns, reqFns.end()));
+            
+            TermEnumerator tEnum(goalQF, baseConstructors, indConstructors, cfg.maxTermDepth, cfg.noCtor);
+            tEnum.getTerms();
+            ExprVector &tList = tEnum.allTerms[bind::typeOf(goalQF->left())];
+            int termsCnt = tList.size();
+            LOG(2, outs()<<" === # terms "<<termsCnt<<"\n");
+            for (int i = 0; i < termsCnt; i++)
+              for (int j = i + 1; j < termsCnt; j++) {
+                ExprSet lhsVars;
+                filter(tList[i], [this](Expr e){return isVarFn(e);}, inserter(lhsVars, lhsVars.end()));
+                if (lhsVars != reqVars) continue;
+                ExprSet rhsVars;
+                filter(tList[j], [this](Expr e){return isVarFn(e);}, inserter(rhsVars, rhsVars.end()));
+                if (rhsVars != reqVars) continue;
+                ExprSet lhsFns;
+                filter(tList[i], isFuncFn, inserter(lhsFns, lhsFns.end()));
+                if (lhsFns != reqFns) continue;
+                ExprSet rhsFns;
+                filter(tList[j], isFuncFn, inserter(rhsFns, rhsFns.end()));
+                if (rhsFns != reqFns) continue;
+                // same set of vars, not the same expr
+                insertUniqueGoal(mk<EQ>(tList[i], tList[j]), candidates);
+              }
+          }
           goalQF = replace(goalQF, mk_fn_map(SimplifyAdd0()));
           Expr simplGoal = rewriteITE(goalQF);
           if (simplGoal) goalQF = simplGoal;
@@ -1290,7 +1347,6 @@ namespace ufo
       }
     }
     int cntFuncFn(Expr e){
-      auto isFuncFn = [](Expr e){return isOpX<FDECL> (e) && e->arity () >= 3;};
       ExprSet funcs;
       filter(e, [](Expr e){return isOpX<FDECL> (e) && e->arity () >= 3;}, 
         inserter(funcs, funcs.end()));
@@ -1326,12 +1382,27 @@ namespace ufo
       }
     }
 
+    bool checkDuplicate(Expr formulaA, Expr formulaB)
+    {
+      assert(isOpX<FORALL>(formulaA) && isOpX<FORALL>(formulaB));
+      if (formulaA->arity() != formulaB->arity()) return false;
+      Expr qfA = formulaA->last(), qfB = formulaB->last();
+      for (int i = 0; i < formulaA->arity() - 1; i++)
+        qfA = replaceAll(qfA, formulaA->arg(i), formulaB->arg(i));
+      if (qfA == qfB)
+        return true;
+      else return false;
+    }
     void tryAssociativity(Expr fail, ExprVector& candidates)
     {
       // CALL ONCE!!!!
       if (_triedAssoc) return;
       else _triedAssoc = true;
       ExprVector funcs;
+      // hack: get all named functions
+      fail = mknary<FORALL>(assumptions);
+
+
       // find functions of type (A, A)->A
       filter(fail, [](Expr e){
         return isOpX<FDECL> (e) && e->arity () == 4
@@ -1355,6 +1426,10 @@ namespace ufo
       if (_triedComm) return;
       else _triedComm = true;
       ExprVector funcs;
+
+      // hack: get all named functions
+      fail = mknary<FORALL>(assumptions);
+
       // find functions of type (A, A)->A
       filter(fail, [](Expr e){
         return isOpX<FDECL> (e) && e->arity () == 4
@@ -1410,16 +1485,16 @@ namespace ufo
           renamedVars.push_back(bind::fapp(bind::rename(varDecl, newName)));
         }
         Expr goalQF = replaceAll(f, vars, renamedVars);
-        if (cfg.tryAssoc) tryAssociativity(goalQF, candidates);
         if (cfg.tryComm) tryCommutativity(goalQF, candidates);
+        if (cfg.tryAssoc) tryAssociativity(goalQF, candidates);
         generalize(goalQF, renamedVars, candidates);
         //break;
       }
       bool assoc_only = false;
       if (failures.empty()) {
         LOG(0, outs()<<"ATTENTION!!! max search depth not enough to reach failure points!!\n");
-        if (cfg.tryAssoc) tryAssociativity(originaGoal, candidates);
         if (cfg.tryComm) tryCommutativity(originaGoal, candidates);
+        if (cfg.tryAssoc) tryAssociativity(originaGoal, candidates);
         assoc_only = true;
       }
       
@@ -1468,7 +1543,14 @@ namespace ufo
         assm.push_back(lemma);
         newLemmas.push_back(lemma);
         Expr firstV = lemma->first();
-        if (getTerm<string>(firstV->left()).substr(0, 9) == "_assoc_x_" && !assoc_only) continue;
+        if (!assoc_only)
+        {
+          string varName = getTerm<string>(firstV->left());
+          if (varName.substr(0, 9) == "_assoc_x_" 
+            ||varName.substr(0, 8) == "_comm_x_" )
+            continue;
+        }
+        
         ADTSolver sol (originaGoal, assm, constructors, cfg);
         LOG(1, outs()<<"======={ try original goal with lemma\n");
         res = sol.solve (basenums, indnums);

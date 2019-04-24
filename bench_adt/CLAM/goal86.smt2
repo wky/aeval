@@ -34,14 +34,40 @@
 (declare-fun lst-intersection (Lst Lst) Lst)
 (declare-fun lst-union (Lst Lst) Lst)
 (define-fun leq ((x Nat) (y Nat)) Bool (or (= x y) (less x y)))
+
+
 (assert (forall ((n Nat)) (= (plus zero n) n)))
 (assert (forall ((n Nat) (m Nat)) (= (plus (succ n) m) (succ (plus n m)))))
+
+
 (assert (forall ((n Nat)) (= (mult zero n) zero)))
 (assert (forall ((n Nat) (m Nat)) (= (mult (succ n) m) (plus (mult n m) m))))
+
+
 (assert (forall ((n Nat)) (= (exp n zero) (succ zero))))
 (assert (forall ((n Nat) (m Nat)) (= (exp n (succ m)) (mult (exp n m) n))))
+
+
 (assert (forall ((n Nat) (m Nat)) (= (qexp n zero m) m)))
 (assert (forall ((n Nat) (m Nat) (p Nat)) (= (qexp n (succ m) p) (qexp n m (mult p n)))))
+
+
+; lemma
+;(assert (forall ((x Nat) (y Nat) (z Nat)) (= (mult (mult x y) z) (mult x (mult y z)))))
+
+
+;lemma 2
+;(assert (forall ((n Nat)) (= (mult n zero) zero)))
+
+
+;lemma 3
+;(assert (forall ((x Nat) (y Nat)) (= (plus (mult x y) y) (mult y (succ x)))))
+
+
+;test failurepoint 1
+;(assert (forall ((y Nat) (z Nat)) (= (mult (exp zero y) z) (qexp zero y z))))
+
+
 (assert (not 
 (forall ((x Nat) (y Nat) (z Nat)) (= (mult (exp x y) z) (qexp x y z))) ; G86 
 ))
