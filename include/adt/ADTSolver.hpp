@@ -25,6 +25,7 @@ namespace ufo
     int genFapp = 0;
     int tryAssoc = 0;
     int tryComm = 0;
+    int moreFail = 0;
     int lemmaTmpl = 1;
     int maxSearchD = 15;
     int maxSameAssm = 5;
@@ -42,6 +43,7 @@ namespace ufo
         {"gen-fapp", required_argument, NULL, 'G'},
         {"try-assoc", no_argument, NULL, 'A'},
         {"try-comm", no_argument, NULL, 'c'},
+        {"more-fail", no_argument, NULL, 'f'},
         {"template", required_argument,  NULL,  'T'},
         {"max-search",  required_argument, NULL, 'D'},
         {"max-same-assm", required_argument, NULL, 'S'},
@@ -77,6 +79,8 @@ namespace ufo
           case 'c':
             tryComm = 1;
             break;
+          case 'f':
+            moreFail = 1;
           case 'T':
             lemmaTmpl = value;
             break;
@@ -361,6 +365,7 @@ namespace ufo
 
     int branches;
     int nodes;
+    bool importedFailure;
     public:
 
     ADTSolver(Expr _goal, ExprVector& _assumptions, ExprVector& _constructors, Config _cfg) :
@@ -371,14 +376,15 @@ namespace ufo
       // new instance of ADTSolver
       _cntr ++;
       _nextInt = 0;
+      importedFailure = false;
     }
     void saveBranchFactor(int b){
       branches += b;
       nodes ++;
     }
-    bool simplifyGoal()
+    bool simplifyGoal(Expr& g)
     {
-      Expr goalQF = goal->last();
+      Expr goalQF = g->last();
       for (auto & a : assumptions)
       {
         Expr goalSimpl = useAssumption(goalQF, a);
@@ -389,17 +395,17 @@ namespace ufo
       if (u.isEquiv(goalQF, mk<TRUE>(efac))) return true;
 
       ExprVector args;
-      for (int i = 0; i < goal->arity() - 1; i++)
+      for (int i = 0; i < g->arity() - 1; i++)
       {
-        if (contains(goal->last(), goal->arg(i))) args.push_back(goal->arg(i));
+        if (contains(g->last(), g->arg(i))) args.push_back(g->arg(i));
       }
-      if (args.size() == 0) goal = goalQF;
+      if (args.size() == 0) g = goalQF;
       else
       {
         args.push_back(goalQF);
-        goal = mknary<FORALL>(args);
+        g = mknary<FORALL>(args);
       }
-      rewriteHistory.push_back(goal);
+      rewriteHistory.push_back(g);
       return false;
     }
     bool testNotEQ(Expr eq){
@@ -589,20 +595,25 @@ namespace ufo
       if (!isOpX<EQ>(eq) || eq->arity() != 2) return eq;
       Expr lhs = eq->left();
       Expr rhs = eq->right();
-      if (!isOpX<FAPP>(lhs) || !isOpX<FAPP>(rhs) || (lhs->first() != rhs->first()) || lhs->arity() < 2) return eq;
+      if (!isOpX<FAPP>(lhs) || !isOpX<FAPP>(rhs) || (lhs->first() != rhs->first()) || lhs->arity() != 2) return eq;
 
-      int cntDiff = 0, diffArg = -1;
-      for (int i = 1; i < lhs->arity(); i++){
-        Expr larg = lhs->arg(i);
-        Expr rarg = rhs->arg(i);
-        if (larg != rarg){
-          cntDiff ++;
-          diffArg = i;
-        }
-      }
+      // int cntDiff = 0, diffArg = -1;
+      // for (int i = 1; i < lhs->arity(); i++){
+      //   Expr larg = lhs->arg(i);
+      //   Expr rarg = rhs->arg(i);
+      //   if (larg != rarg){
+      //     cntDiff ++;
+      //     diffArg = i;
+      //   }
+      // }
       
-      if (cntDiff == 1 && isIndCtorFn(lhs)) 
-        return mk<EQ>(lhs->arg(diffArg), rhs->arg(diffArg));
+      // if (cntDiff == 1 && (lhs->first() == lhs->first()->arg())) 
+      //   return mk<EQ>(lhs->arg(diffArg), rhs->arg(diffArg));
+
+
+      // Fn: Ty->Ty
+      if (lhs->first()->arg(1) == lhs->first()->arg(2))
+        return mk<EQ>(lhs->arg(1), rhs->arg(1));
       else return eq;
     }
 
@@ -670,11 +681,13 @@ namespace ufo
           if (res != NULL)
           {
             branch ++;
-            noMoreRewriting = false;
+            // If revisit && no other assm can apply, still count as "noMoreRewriting" with more-fail moreFail
             if (rewriteSet.find(res) != rewriteSet.end()){
               LOG(5, outs()<<"  revisit\n");
+              if (!cfg.moreFail) noMoreRewriting = false;
               continue;
             }
+            noMoreRewriting = false;
             rewriteSet.insert(res);
             LOG(3, outs () << "rewritten [" << i << "]:   " << *res << "\n");
             // save history
@@ -994,7 +1007,16 @@ namespace ufo
           newArgs.push_back(replaceAll(goal->last(), bind::fapp(typeDecl), indConsApp));
           Expr newGoal = mknary<FORALL>(newArgs);
           ADTSolver sol (newGoal, assumptions, constructors, cfg);
-          return sol.solve (basenums, indnums);
+          bool nestedRes = sol.solve (basenums, indnums);
+          if (!nestedRes && failures.empty()){
+            importedFailure = true;
+            LOG(2, outs()<<"Nested induction for ind case Failed, logging failure points: "<<sol.failures.size()<<"\n"); 
+            for (auto f: sol.failures)
+              LOG(2, outs()<<"Failure from nested induction: "<<*f<<"\n"); 
+            failures.insert(sol.failures.begin(), sol.failures.end());
+          }
+
+          return nestedRes;
         }
         return false;
       }
@@ -1134,8 +1156,19 @@ namespace ufo
         else
         {
           LOG(1, outs()<<" === generalize failed, prepare term enum\n");
-          assert(isOpX<EQ>(newGoalQF) && "Can only deal with equalities");
-          Expr LHS = newGoalQF->first();
+          Expr LHS;
+          if (isOpX<EQ>(newGoalQF))
+            LHS = newGoalQF->first();
+          else {
+            LHS = goalQF;
+            // strip away boolean predicates before term enum
+            while (isOpX<BOOL_TY>(bind::typeOf(LHS))){
+              if (isOpX<FAPP>(LHS))
+                LHS = LHS->arg(1);
+              else
+                LHS = LHS->first();
+            }
+          }
           // replace base ctor
           ExprVector baseCtors;
           filter(LHS, [this](Expr e){return isBaseCtorFn(e);}, back_inserter(baseCtors));
@@ -1172,7 +1205,7 @@ namespace ufo
               LHSchoices.push_back(replaceAll(LHS, fapp, newVar));
             }
             if (LHSchoices.size() == 0) LHS = newGoalQF->first();
-            else LHS = LHSchoices[0];
+            else LHS = LHSchoices[cfg.genFapp - 1];
           }
           Expr lhsTy = bind::typeOf(LHS);
           
@@ -1487,7 +1520,20 @@ namespace ufo
         Expr goalQF = replaceAll(f, vars, renamedVars);
         if (cfg.tryComm) tryCommutativity(goalQF, candidates);
         if (cfg.tryAssoc) tryAssociativity(goalQF, candidates);
-        generalize(goalQF, renamedVars, candidates);
+        
+        if (importedFailure) insertUniqueGoal(goalQF, candidates);
+        else generalize(goalQF, renamedVars, candidates);
+        // ExprVector mkLemma = renamedVars;
+        // mkLemma.push_back(goalQF);
+        // Expr lemmaAsIs = mknary<FORALL>(mkLemma);
+        // bool trivial = false;
+        // for (int i = 0; i < cfg.presolveTimes; i++)
+        //   if (simplifyGoal(lemmaAsIs)) {
+        //     trivial = true;
+        //     break;
+        //   }
+        // if (!trivial)
+        //   generalize(goalQF, renamedVars, candidates);
         //break;
       }
       bool assoc_only = false;
@@ -1578,7 +1624,7 @@ namespace ufo
       rewriteHistory.push_back(goal);
       for (int i = 0; i < cfg.presolveTimes; i++)
       {
-        if (simplifyGoal())
+        if (simplifyGoal(goal))
         {
           LOG(1, outs () << "Trivially Proved\n");
           return true;
