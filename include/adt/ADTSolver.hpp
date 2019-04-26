@@ -589,31 +589,34 @@ namespace ufo
     }
 
     
-    // Reduce F(A,B,C ..., X) = F(A,B,C ..., Y) to X = Y
+    // Reduce Proving F(A,B,C ..., X) = F(A,B,C ..., Y) to Proving X = Y
     Expr rewriteTyTy(Expr eq)
     {
       if (!isOpX<EQ>(eq) || eq->arity() != 2) return eq;
       Expr lhs = eq->left();
       Expr rhs = eq->right();
-      if (!isOpX<FAPP>(lhs) || !isOpX<FAPP>(rhs) || (lhs->first() != rhs->first()) || lhs->arity() != 2) return eq;
+      // if (!isOpX<FAPP>(lhs) || !isOpX<FAPP>(rhs) || (lhs->first() != rhs->first()) || lhs->arity() != 2) return eq;
+      if (!isOpX<FAPP>(lhs) || !isOpX<FAPP>(rhs) || (lhs->first() != rhs->first()) || lhs->arity() < 2) return eq;
 
-      // int cntDiff = 0, diffArg = -1;
-      // for (int i = 1; i < lhs->arity(); i++){
-      //   Expr larg = lhs->arg(i);
-      //   Expr rarg = rhs->arg(i);
-      //   if (larg != rarg){
-      //     cntDiff ++;
-      //     diffArg = i;
-      //   }
-      // }
+      int cntDiff = 0, diffArg = -1;
+      for (int i = 1; i < lhs->arity(); i++){
+        Expr larg = lhs->arg(i);
+        Expr rarg = rhs->arg(i);
+        if (larg != rarg){
+          cntDiff ++;
+          diffArg = i;
+        }
+      }
       
       // if (cntDiff == 1 && (lhs->first() == lhs->first()->arg())) 
-      //   return mk<EQ>(lhs->arg(diffArg), rhs->arg(diffArg));
+
+      if (cntDiff == 1) 
+        return mk<EQ>(lhs->arg(diffArg), rhs->arg(diffArg));
 
 
       // Fn: Ty->Ty
-      if (lhs->first()->arg(1) == lhs->first()->arg(2))
-        return mk<EQ>(lhs->arg(1), rhs->arg(1));
+      // if (lhs->first()->arg(1) == lhs->first()->arg(2))
+      //   return mk<EQ>(lhs->arg(1), rhs->arg(1));
       else return eq;
     }
 

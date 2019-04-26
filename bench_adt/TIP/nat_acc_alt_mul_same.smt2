@@ -16,7 +16,7 @@
       (acc_alt_mul x y)))))))
 
 
-(assert (forall ((y Nat)) (= (plus Z y) Z)))
+(assert (forall ((y Nat)) (= (plus Z y) y)))
 (assert (forall ((x Nat) (y Nat)) (= (plus (S x) y) (S (plus x y)))))
 
 
