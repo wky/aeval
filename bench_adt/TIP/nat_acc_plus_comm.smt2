@@ -9,6 +9,7 @@
 
 (assert (forall ((y Nat)) (= (acc_plus Z y) y)))
 (assert (forall ((x Nat) (y Nat)) (= (acc_plus (S x) y) (acc_plus x (S y)))))
+(assert (forall ((x Nat) (y Nat)) (= (S (acc_plus x y)) (acc_plus x (S y)))))
 
 
 (assert

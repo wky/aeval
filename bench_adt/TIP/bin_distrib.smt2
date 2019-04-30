@@ -38,8 +38,6 @@
 ;               (s (ZeroAnd (ZeroAnd_0 x)))))
 ;           (s y))))))
 
-
-
 (assert
   (forall ((y Bin))
     (= (plus One y) (s y))))

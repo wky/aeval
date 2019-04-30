@@ -67,9 +67,48 @@
     (= (plus2 (N x) (N y)) (N (plus x y)))))
 
 
-(assert
-  (not
-    (forall ((x Z) (y Z) (z Z))
-      (= (plus2 x (plus2 y z)) (plus2 (plus2 x y) z)))))
+
+; (assert
+;   (not
+;     (forall ((x Nat) (y Nat) (z Nat))
+;       (= (plus2 (P x) (plus2 (P y) (P z))) (plus2 (plus2 (P x) (P y)) (P z))))))
+
+; (assert
+;   (not
+;     (forall ((x Nat) (y Nat) (z Nat))
+;       (= (plus2 (P x) (plus2 (P y) (N z))) (plus2 (plus2 (P x) (P y)) (N z))))))
+
+; (assert
+;   (not
+;     (forall ((x Nat) (y Nat) (z Nat))
+;       (= (plus2 (P x) (plus2 (N y) (N z))) (plus2 (plus2 (P x) (N y)) (N z))))))
+
+; (assert
+;   (not
+;     (forall ((x Nat) (y Nat) (z Nat))
+;       (= (plus2 (P x) (plus2 (N y) (P z))) (plus2 (plus2 (P x) (N y)) (P z))))))
+
+
+; (assert
+;   (not
+;     (forall ((x Nat) (y Nat) (z Nat))
+;       (= (plus2 (N x) (plus2 (P y) (P z))) (plus2 (plus2 (N x) (P y)) (P z))))))
+
+
+; (assert
+;   (not
+;     (forall ((x Nat) (y Nat) (z Nat))
+;       (= (plus2 N x) (plus2 (P y) (N z))) (plus2 (plus2 (N x) (P y)) (N z))))))
+
+; (assert
+;   (not
+;     (forall ((x Nat) (y Nat) (z Nat))
+;       (= (plus2 (N x) (plus2 (N y) (P z))) (plus2 (plus2 (N x) (N y)) (P z))))))
+
+; (assert
+;   (not
+;     (forall ((x Nat) (y Nat) (z Nat))
+;       (= (plus2 (N x) (plus2 (N y) (N z))) (plus2 (plus2 (N x) (N y)) (N z))))))
+
 
 (check-sat)
