@@ -46,14 +46,14 @@ lemma_synth_configs = [
       "LEON/amortize-queue-goal2",
       "LEON/amortize-queue-goal3",
       "LEON/amortize-queue-goal4",
-      "LEON/amortize-queue-goal6",
+      # "LEON/amortize-queue-goal6",
       "LEON/amortize-queue-goal8",
       "LEON/amortize-queue-goal10",
       "LEON/amortize-queue-goal11",
       "LEON/amortize-queue-goal12",
       "LEON/amortize-queue-goal15",
-      "LEON/bsearch-tree-goal1",
-      "LEON/bsearch-tree-goal3",
+      # "LEON/bsearch-tree-goal1",
+      # "LEON/bsearch-tree-goal3",
       "TIP/bin_plus_comm",
       "TIP/list_append_inj_1",
       "TIP/list_Interleave",
@@ -62,8 +62,8 @@ lemma_synth_configs = [
       "TIP/nat_acc_plus_comm",
       "TIP/nat_acc_plus_same",
       "TIP/nat_pow_one",
-      "TIP/rotate_snoc_self",
-      "TIP/rotate_snoc",
+      # "TIP/rotate_snoc_self",
+      # "TIP/rotate_snoc",
       "TIP/weird_nat_add3_assoc1",
       "TIP/weird_nat_add3_assoc2",
       "TIP/weird_nat_add3_assoc3",
@@ -101,7 +101,7 @@ lemma_synth_configs = [
   ("--try-comm",
     [ 
       "CLAM/goal1",
-      "CLAM/goal13",
+      # "CLAM/goal13",
       "CLAM/goal15",
       "TIP/bin_s",
     ]),
@@ -127,10 +127,10 @@ lemma_synth_configs = [
     [
       "CLAM/goal16",
     ]),
-  ("--try-assoc --gen-fapp 1",
-    [
-      "CLAM/goal82",
-    ]),
+  # ("--try-assoc --gen-fapp 1",
+  #   [
+  #     "CLAM/goal82",
+  #   ]),
   ("--try-assoc --gen-fapp 2",
     [
       "CLAM/goal30",
@@ -152,7 +152,7 @@ def main():
         real_fname = file_path+file_name+file_ext
         print("Running ", exe_path, config, real_fname)
         log_file = open(log_path+file_name+'.log', 'w')
-        ret = subprocess.call([exe_path, config + extra_args, real_fname], stdout=log_file)
+        ret = subprocess.call([exe_path, *((config + extra_args).split()), real_fname], stdout=log_file)
         if ret == 0:
           print("Success")
         else:

@@ -618,14 +618,21 @@ namespace ufo
       
       // if (cntDiff == 1 && (lhs->first() == lhs->first()->arg())) 
 
-      if (cntDiff == 1) 
-        return mk<EQ>(lhs->arg(diffArg), rhs->arg(diffArg));
+      if (cntDiff == 1) {
+        // Fn: Ty...->Ty
+        Expr ty = lhs->first()->arg(1);
+        int argN = 2;
+        for (; argN < lhs->first()->arity(); argN++)
+          if (ty != lhs->first()->arg(argN))
+            break;
+        if (argN == lhs->first()->arity())
+          return mk<EQ>(lhs->arg(diffArg), rhs->arg(diffArg));
+      }
 
 
-      // Fn: Ty->Ty
       // if (lhs->first()->arg(1) == lhs->first()->arg(2))
       //   return mk<EQ>(lhs->arg(1), rhs->arg(1));
-      else return eq;
+      return eq;
     }
 
     
