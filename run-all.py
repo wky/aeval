@@ -22,6 +22,9 @@ lemma_synth_configs = [
       "CLAM/goal26",
       "CLAM/goal27",
       "CLAM/goal28",
+      "CLAM/goal45",
+      "CLAM/goal46",
+      "CLAM/goal47",
       "CLAM/goal51",
       "CLAM/goal52",
       "CLAM/goal53",
@@ -41,6 +44,7 @@ lemma_synth_configs = [
       "CLAM/goal71",
       "CLAM/goal72",
       "CLAM/goal74",
+      "CLAM/goal75",
       "CLAM/goal76",
       "LEON/amortize-queue-goal1",
       "LEON/amortize-queue-goal2",
@@ -78,10 +82,6 @@ lemma_synth_configs = [
       "TIP/weird_nat_add3acc_assoc3",
       "TIP/weird_nat_add3acc_comm12",
       "TIP/weird_nat_add3acc_rot",
-      "TIP/weird_nat_add3acc_comm12",
-      "TIP/weird_nat_add3acc_comm12",
-      "TIP/weird_nat_add3acc_comm12",
-      "TIP/weird_nat_add3acc_comm12",
     ]),
   ("--try-assoc",
     [ 
@@ -101,7 +101,7 @@ lemma_synth_configs = [
   ("--try-comm",
     [ 
       "CLAM/goal1",
-      # "CLAM/goal13",
+      "CLAM/goal13",
       "CLAM/goal15",
       "TIP/bin_s",
     ]),
@@ -137,10 +137,10 @@ lemma_synth_configs = [
     ]),
 ]
 
-
+cvc4_command = ['cvc4-1.7', '--tlimit=300000', '--quant-ind', '--quant-cf', '--conjecture-gen', '--conjecture-gen-per-round=3', '--full-saturate-quant', '--lang=smt2.0']
 
 exe_path = 'build/tools/adt/ind'
-extra_args = ' '
+extra_args = ''
 file_path = 'bench_adt/'
 file_ext = '.smt2'
 
@@ -152,7 +152,7 @@ def main():
         real_fname = file_path+file_name+file_ext
         print("Running ", exe_path, config, real_fname)
         log_file = open(log_path+file_name+'.log', 'w')
-        ret = subprocess.call([exe_path, *((config + extra_args).split()), real_fname], stdout=log_file)
+        ret = subprocess.call([exe_path, *((config + ' ' + extra_args).split()), real_fname], stdout=log_file)
         if ret == 0:
           print("Success")
         else:
