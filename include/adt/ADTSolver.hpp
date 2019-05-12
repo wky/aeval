@@ -640,8 +640,9 @@ namespace ufo
     bool rewriteAssumptions(Expr subgoal)
     {
       subgoal = replace(subgoal, mk_fn_map(SimplifyAdd0()));
-      Expr newGoal = rewriteITE(subgoal);
-      if (newGoal) subgoal = newGoal;
+      // Expr newGoal = rewriteITE(subgoal);
+      // if (newGoal) subgoal = newGoal;
+      subgoal = u.simplifyITE(subgoal);
       subgoal = rewriteTyTy(subgoal);
       // subgoal = rewriteImplication(subgoal);
       if (u.isEquiv(subgoal, mk<TRUE>(efac))) {
@@ -1396,8 +1397,9 @@ namespace ufo
               }
           }
           goalQF = replace(goalQF, mk_fn_map(SimplifyAdd0()));
-          Expr simplGoal = rewriteITE(goalQF);
-          if (simplGoal) goalQF = simplGoal;
+          // Expr simplGoal = rewriteITE(goalQF);
+          // if (simplGoal) goalQF = simplGoal;
+          goalQF = u.simplifyITE(goalQF);
           goalQF = genFapp(goalQF);
           if (goalQF) insertUniqueGoal(goalQF, candidates);
         }
@@ -1575,8 +1577,9 @@ namespace ufo
 
       bool res;
       LOG(1, outs()<<"\n\n======== # of lemma candidates "<<candidates.size()<< "\n\n");
-
+      int lemma_cntr = 0;
       for (Expr lemma: candidates) {
+        lemma_cntr ++;
         res = true;
         int nQVars = lemma->arity() - 1;
         int nTest = cfg.refuteTests;
@@ -1622,6 +1625,7 @@ namespace ufo
           string varName = getTerm<string>(firstV->left());
           if (varName.substr(0, 9) == "_assoc_x_" 
             ||varName.substr(0, 8) == "_comm_x_" )
+            if (lemma_cntr != candidates.size())
             continue;
         }
         

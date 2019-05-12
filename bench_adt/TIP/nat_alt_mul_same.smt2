@@ -11,12 +11,12 @@
 (assert (forall ((y Nat)) (= (plus Z y) y)))
 (assert (forall ((x Nat) (y Nat)) (= (plus (S x) y) (S (plus x y)))))
 
-(assert (forall ((x Nat)) (= (acc_alt_mul x Z) Z)))
-(assert (forall ((y Nat)) (= (acc_alt_mul Z y) Z)))
+(assert (forall ((x Nat)) (= (alt_mul x Z) Z)))
+(assert (forall ((y Nat)) (= (alt_mul Z y) Z)))
 (assert (forall ((x Nat) (y Nat)) 
-  (= (acc_alt_mul (S x) (S y)) 
-    (S (acc_plus x (acc_plus y 
-      (acc_alt_mul x y)))))))
+  (= (alt_mul (S x) (S y)) 
+    (S (plus x (plus y 
+      (alt_mul x y)))))))
 
 (assert (forall ((y Nat)) (= (mult Z y) Z)))
 (assert (forall ((x Nat) (y Nat)) (= (mult (S x) y) (plus y (mult x y)))))

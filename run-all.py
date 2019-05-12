@@ -1,5 +1,5 @@
 #!/usr/local/bin/python3
-
+import time
 import sys
 import subprocess
 
@@ -29,6 +29,7 @@ lemma_synth_configs = [
       "CLAM/goal52",
       "CLAM/goal53",
       "CLAM/goal54",
+      "CLAM/goal55",
       "CLAM/goal57",
       "CLAM/goal58",
       "CLAM/goal59",
@@ -41,6 +42,7 @@ lemma_synth_configs = [
       "CLAM/goal67",
       "CLAM/goal68",
       "CLAM/goal69",
+      "CLAM/goal70",
       "CLAM/goal71",
       "CLAM/goal72",
       "CLAM/goal74",
@@ -50,14 +52,13 @@ lemma_synth_configs = [
       "LEON/amortize-queue-goal2",
       "LEON/amortize-queue-goal3",
       "LEON/amortize-queue-goal4",
-      # "LEON/amortize-queue-goal6",
       "LEON/amortize-queue-goal8",
       "LEON/amortize-queue-goal10",
       "LEON/amortize-queue-goal11",
       "LEON/amortize-queue-goal12",
       "LEON/amortize-queue-goal15",
-      # "LEON/bsearch-tree-goal1",
-      # "LEON/bsearch-tree-goal3",
+      # "LEON/bsearch-tree-goal1", investigate later
+      # "LEON/bsearch-tree-goal3", investigate later
       "TIP/bin_plus_comm",
       "TIP/list_append_inj_1",
       "TIP/list_Interleave",
@@ -129,7 +130,7 @@ lemma_synth_configs = [
     ]),
   # ("--try-assoc --gen-fapp 1",
   #   [
-  #     "CLAM/goal82",
+  #     "CLAM/goal82", ????
   #   ]),
   ("--try-assoc --gen-fapp 2",
     [
@@ -152,11 +153,14 @@ def main():
         real_fname = file_path+file_name+file_ext
         print("Running ", exe_path, config, real_fname)
         log_file = open(log_path+file_name+'.log', 'w')
+        start = time.time()
         ret = subprocess.call([exe_path, *((config + ' ' + extra_args).split()), real_fname], stdout=log_file)
+        msg = ""
         if ret == 0:
-          print("Success")
+          msg = "Success"
         else:
-          print("Failed")
+          msg = "FAILED"
+        print(msg + "  Time: " + str(time.time() - start))
         log_file.close()
 
 if __name__ == '__main__':
