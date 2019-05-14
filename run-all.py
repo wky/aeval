@@ -94,6 +94,7 @@ lemma_synth_configs = [
       "CLAM/goal29",
       "CLAM/goal32",
       "CLAM/goal77",
+      "CLAM/goal79",
       "CLAM/goal80",
       "CLAM/goal81",
       "CLAM/goal83",
@@ -115,6 +116,10 @@ lemma_synth_configs = [
       "CLAM/goal5",
       "CLAM/goal6",
       "CLAM/goal12",
+    ]),
+  ("--gen-fapp 2",
+    [ 
+      "CLAM/goal56",
     ]),
   ("--gen-fapp 3",
     [ 
