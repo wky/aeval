@@ -1,0 +1,103 @@
+VAR NAME: _FH_1 ORIGNAL NAME: S___ILA_I_inst
+VAR NAME: _FH_2 ORIGNAL NAME: S___ILA_SO_r0
+VAR NAME: _FH_3 ORIGNAL NAME: S___ILA_SO_r1
+VAR NAME: _FH_4 ORIGNAL NAME: S___ILA_SO_r2
+VAR NAME: _FH_5 ORIGNAL NAME: S___ILA_SO_r3
+VAR NAME: _FH_8 ORIGNAL NAME: S___VLG_I_dummy_read_rf
+VAR NAME: _FH_9 ORIGNAL NAME: S_m1.ex_wb_rd DATA-OUT
+VAR NAME: _FH_10 ORIGNAL NAME: S_m1.ex_wb_reg_wen CTRL-OUT
+VAR NAME: _FH_11 ORIGNAL NAME: S_m1.ex_wb_val
+VAR NAME: _FH_12 ORIGNAL NAME: S_m1.id_ex_op
+VAR NAME: _FH_13 ORIGNAL NAME: S_m1.id_ex_rd DATA-OUT
+VAR NAME: _FH_14 ORIGNAL NAME: S_m1.id_ex_reg_wen CTRL-OUT
+VAR NAME: _FH_15 ORIGNAL NAME: S_m1.id_ex_rs1_val
+VAR NAME: _FH_16 ORIGNAL NAME: S_m1.id_ex_rs2_val
+VAR NAME: _FH_17 ORIGNAL NAME: S_m1.reg_0_w_stage CTRL-STATE
+VAR NAME: _FH_18 ORIGNAL NAME: S_m1.reg_1_w_stage CTRL-STATE
+VAR NAME: _FH_19 ORIGNAL NAME: S_m1.reg_2_w_stage CTRL-STATE
+VAR NAME: _FH_20 ORIGNAL NAME: S_m1.reg_3_w_stage CTRL-STATE
+VAR NAME: _FH_21 ORIGNAL NAME: S_m1.registers[2]
+VAR NAME: _FH_23 ORIGNAL NAME: S_m1.registers[3]
+VAR NAME: _FH_24 ORIGNAL NAME: S_m1.registers[1]
+VAR NAME: _FH_25 ORIGNAL NAME: S_m1.registers[0]
+Enumerated Ante #1 :(S_m1.reg_0_w_stage=(0:bv(2)))
+Enumerated Ante #2 :(S_m1.reg_0_w_stage=(1:bv(2)))
+Enumerated Ante #3 :(S_m1.reg_0_w_stage=(2:bv(2)))
+Enumerated Ante #4 :(S_m1.reg_0_w_stage=(3:bv(2)))
+Enumerated Ante #5 :(S_m1.reg_1_w_stage=(0:bv(2)))
+Enumerated Ante #6 :(S_m1.reg_1_w_stage=(1:bv(2)))
+Enumerated Ante #7 :(S_m1.reg_1_w_stage=(2:bv(2)))
+Enumerated Ante #8 :(S_m1.reg_1_w_stage=(3:bv(2)))
+Enumerated Ante #9 :(S_m1.reg_2_w_stage=(0:bv(2)))
+Enumerated Ante #10 :(S_m1.reg_2_w_stage=(1:bv(2)))
+Enumerated Ante #11 :(S_m1.reg_2_w_stage=(2:bv(2)))
+Enumerated Ante #12 :(S_m1.reg_2_w_stage=(3:bv(2)))
+Enumerated Ante #13 :(S_m1.reg_3_w_stage=(0:bv(2)))
+Enumerated Ante #14 :(S_m1.reg_3_w_stage=(1:bv(2)))
+Enumerated Ante #15 :(S_m1.reg_3_w_stage=(2:bv(2)))
+Enumerated Ante #16 :(S_m1.reg_3_w_stage=(3:bv(2)))
+Enumerated Dconj #1 :(S_m1.ex_wb_reg_wen=(0:bv(1)))
+Enumerated Dconj #2 :(S_m1.ex_wb_reg_wen=(1:bv(1)))
+Enumerated Dconj #3 :(S_m1.id_ex_reg_wen=(0:bv(1)))
+Enumerated Dconj #4 :(S_m1.id_ex_reg_wen=(1:bv(1)))
+Enumerated Dconj #5 :(S_m1.ex_wb_rd=(0:bv(2)))
+Enumerated Dconj #6 :(S_m1.ex_wb_rd=(1:bv(2)))
+Enumerated Dconj #7 :(S_m1.ex_wb_rd=(2:bv(2)))
+Enumerated Dconj #8 :(S_m1.ex_wb_rd=(3:bv(2)))
+Enumerated Dconj #9 :(S_m1.id_ex_rd=(0:bv(2)))
+Enumerated Dconj #10 :(S_m1.id_ex_rd=(1:bv(2)))
+Enumerated Dconj #11 :(S_m1.id_ex_rd=(2:bv(2)))
+Enumerated Dconj #12 :(S_m1.id_ex_rd=(3:bv(2)))
+Enumerated Dconj #13 :((S_m1.ex_wb_reg_wen=(0:bv(1)))&&(S_m1.id_ex_reg_wen=(0:bv(1))))
+Enumerated Dconj #14 :((S_m1.ex_wb_reg_wen=(0:bv(1)))&&(S_m1.id_ex_reg_wen=(1:bv(1))))
+Enumerated Dconj #15 :((S_m1.ex_wb_reg_wen=(1:bv(1)))&&(S_m1.id_ex_reg_wen=(0:bv(1))))
+Enumerated Dconj #16 :((S_m1.ex_wb_reg_wen=(1:bv(1)))&&(S_m1.id_ex_reg_wen=(1:bv(1))))
+Enumerated Dconj #17 :((S_m1.ex_wb_reg_wen=(0:bv(1)))&&(S_m1.ex_wb_rd=(0:bv(2))))
+Enumerated Dconj #18 :((S_m1.ex_wb_reg_wen=(0:bv(1)))&&(S_m1.ex_wb_rd=(1:bv(2))))
+Enumerated Dconj #19 :((S_m1.ex_wb_reg_wen=(0:bv(1)))&&(S_m1.ex_wb_rd=(2:bv(2))))
+Enumerated Dconj #20 :((S_m1.ex_wb_reg_wen=(0:bv(1)))&&(S_m1.ex_wb_rd=(3:bv(2))))
+Enumerated Dconj #21 :((S_m1.ex_wb_reg_wen=(1:bv(1)))&&(S_m1.ex_wb_rd=(0:bv(2))))
+Enumerated Dconj #22 :((S_m1.ex_wb_reg_wen=(1:bv(1)))&&(S_m1.ex_wb_rd=(1:bv(2))))
+Enumerated Dconj #23 :((S_m1.ex_wb_reg_wen=(1:bv(1)))&&(S_m1.ex_wb_rd=(2:bv(2))))
+Enumerated Dconj #24 :((S_m1.ex_wb_reg_wen=(1:bv(1)))&&(S_m1.ex_wb_rd=(3:bv(2))))
+Enumerated Dconj #25 :((S_m1.ex_wb_reg_wen=(0:bv(1)))&&(S_m1.id_ex_rd=(0:bv(2))))
+Enumerated Dconj #26 :((S_m1.ex_wb_reg_wen=(0:bv(1)))&&(S_m1.id_ex_rd=(1:bv(2))))
+Enumerated Dconj #27 :((S_m1.ex_wb_reg_wen=(0:bv(1)))&&(S_m1.id_ex_rd=(2:bv(2))))
+Enumerated Dconj #28 :((S_m1.ex_wb_reg_wen=(0:bv(1)))&&(S_m1.id_ex_rd=(3:bv(2))))
+Enumerated Dconj #29 :((S_m1.ex_wb_reg_wen=(1:bv(1)))&&(S_m1.id_ex_rd=(0:bv(2))))
+Enumerated Dconj #30 :((S_m1.ex_wb_reg_wen=(1:bv(1)))&&(S_m1.id_ex_rd=(1:bv(2))))
+Enumerated Dconj #31 :((S_m1.ex_wb_reg_wen=(1:bv(1)))&&(S_m1.id_ex_rd=(2:bv(2))))
+Enumerated Dconj #32 :((S_m1.ex_wb_reg_wen=(1:bv(1)))&&(S_m1.id_ex_rd=(3:bv(2))))
+Enumerated Dconj #33 :((S_m1.id_ex_reg_wen=(0:bv(1)))&&(S_m1.ex_wb_rd=(0:bv(2))))
+Enumerated Dconj #34 :((S_m1.id_ex_reg_wen=(0:bv(1)))&&(S_m1.ex_wb_rd=(1:bv(2))))
+Enumerated Dconj #35 :((S_m1.id_ex_reg_wen=(0:bv(1)))&&(S_m1.ex_wb_rd=(2:bv(2))))
+Enumerated Dconj #36 :((S_m1.id_ex_reg_wen=(0:bv(1)))&&(S_m1.ex_wb_rd=(3:bv(2))))
+Enumerated Dconj #37 :((S_m1.id_ex_reg_wen=(1:bv(1)))&&(S_m1.ex_wb_rd=(0:bv(2))))
+Enumerated Dconj #38 :((S_m1.id_ex_reg_wen=(1:bv(1)))&&(S_m1.ex_wb_rd=(1:bv(2))))
+Enumerated Dconj #39 :((S_m1.id_ex_reg_wen=(1:bv(1)))&&(S_m1.ex_wb_rd=(2:bv(2))))
+Enumerated Dconj #40 :((S_m1.id_ex_reg_wen=(1:bv(1)))&&(S_m1.ex_wb_rd=(3:bv(2))))
+Enumerated Dconj #41 :((S_m1.id_ex_reg_wen=(0:bv(1)))&&(S_m1.id_ex_rd=(0:bv(2))))
+Enumerated Dconj #42 :((S_m1.id_ex_reg_wen=(0:bv(1)))&&(S_m1.id_ex_rd=(1:bv(2))))
+Enumerated Dconj #43 :((S_m1.id_ex_reg_wen=(0:bv(1)))&&(S_m1.id_ex_rd=(2:bv(2))))
+Enumerated Dconj #44 :((S_m1.id_ex_reg_wen=(0:bv(1)))&&(S_m1.id_ex_rd=(3:bv(2))))
+Enumerated Dconj #45 :((S_m1.id_ex_reg_wen=(1:bv(1)))&&(S_m1.id_ex_rd=(0:bv(2))))
+Enumerated Dconj #46 :((S_m1.id_ex_reg_wen=(1:bv(1)))&&(S_m1.id_ex_rd=(1:bv(2))))
+Enumerated Dconj #47 :((S_m1.id_ex_reg_wen=(1:bv(1)))&&(S_m1.id_ex_rd=(2:bv(2))))
+Enumerated Dconj #48 :((S_m1.id_ex_reg_wen=(1:bv(1)))&&(S_m1.id_ex_rd=(3:bv(2))))
+Enumerated Dconj #49 :((S_m1.ex_wb_rd=(0:bv(2)))&&(S_m1.id_ex_rd=(0:bv(2))))
+Enumerated Dconj #50 :((S_m1.ex_wb_rd=(0:bv(2)))&&(S_m1.id_ex_rd=(1:bv(2))))
+Enumerated Dconj #51 :((S_m1.ex_wb_rd=(0:bv(2)))&&(S_m1.id_ex_rd=(2:bv(2))))
+Enumerated Dconj #52 :((S_m1.ex_wb_rd=(0:bv(2)))&&(S_m1.id_ex_rd=(3:bv(2))))
+Enumerated Dconj #53 :((S_m1.ex_wb_rd=(1:bv(2)))&&(S_m1.id_ex_rd=(0:bv(2))))
+Enumerated Dconj #54 :((S_m1.ex_wb_rd=(1:bv(2)))&&(S_m1.id_ex_rd=(1:bv(2))))
+Enumerated Dconj #55 :((S_m1.ex_wb_rd=(1:bv(2)))&&(S_m1.id_ex_rd=(2:bv(2))))
+Enumerated Dconj #56 :((S_m1.ex_wb_rd=(1:bv(2)))&&(S_m1.id_ex_rd=(3:bv(2))))
+Enumerated Dconj #57 :((S_m1.ex_wb_rd=(2:bv(2)))&&(S_m1.id_ex_rd=(0:bv(2))))
+Enumerated Dconj #58 :((S_m1.ex_wb_rd=(2:bv(2)))&&(S_m1.id_ex_rd=(1:bv(2))))
+Enumerated Dconj #59 :((S_m1.ex_wb_rd=(2:bv(2)))&&(S_m1.id_ex_rd=(2:bv(2))))
+Enumerated Dconj #60 :((S_m1.ex_wb_rd=(2:bv(2)))&&(S_m1.id_ex_rd=(3:bv(2))))
+Enumerated Dconj #61 :((S_m1.ex_wb_rd=(3:bv(2)))&&(S_m1.id_ex_rd=(0:bv(2))))
+Enumerated Dconj #62 :((S_m1.ex_wb_rd=(3:bv(2)))&&(S_m1.id_ex_rd=(1:bv(2))))
+Enumerated Dconj #63 :((S_m1.ex_wb_rd=(3:bv(2)))&&(S_m1.id_ex_rd=(2:bv(2))))
+Enumerated Dconj #64 :((S_m1.ex_wb_rd=(3:bv(2)))&&(S_m1.id_ex_rd=(3:bv(2))))
+=== TOTAL candidates: 33280

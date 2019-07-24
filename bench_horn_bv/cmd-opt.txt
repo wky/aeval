@@ -1,0 +1,9 @@
+tools/bv/bv --chc-file="../bench_horn_bv/wrapper_2.smt2" --const-bw=2 --ante-size=1 --conseq-size=2 --conseq-disj=1 --ctrl-state="S_m1.aes_reg_state" --ctrl-output="S_m1.byte_counter" --data-output="S_m1.uaes_ctr, S_m1.block_counter" --data-input="S_m1.aes_reg_ctr_i.reg_out, S_m1.block_counter, S_m1.operated_bytes_count"
+
+
+
+
+
+
+tools/bv/bv --chc-file="../bench_horn_bv/wrapper_1.smt2" --const-bw=2 --ante-size=1 --conseq-size=2 --conseq-disj=2 --ctrl-state="S_m1.reg_0_w_stage, S_m1.reg_1_w_stage, S_m1.reg_2_w_stage, S_m1.reg_3_w_stage" --ctrl-output="S_m1.id_ex_reg_wen, S_m1.ex_wb_reg_wen" --data-out="S_m1.id_ex_rd, S_m1.ex_wb_rd"
+
