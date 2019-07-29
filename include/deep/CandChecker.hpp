@@ -4,6 +4,9 @@
 #include "ae/SMTUtils.hpp"
 #include "Horn.hpp"
 #include <getopt.h>
+// #include <boost/filesystem.hpp>
+#include <ctime>
+#include <fstream>
 
 using namespace std;
 using namespace boost;
@@ -310,7 +313,7 @@ namespace ufo
     int CONSEQ_ConjSize = 2;
     int CONSEQ_DisjSize = 1;
 
-    char* chcfile, gfile;
+    char *chcfile, *gfile;
     while(1) {
       int opt_idx;
       c = getopt_long(argc, argv, "S:I:O:i:o:B:A:C:D:", long_options, &opt_idx);
@@ -360,6 +363,16 @@ namespace ufo
       }
     }
 
+    time_t t = time(nullptr);
+    char timestampstr[100];
+    strftime(timestampstr, sizeof(timestampstr), "%F-%H-%M-%S.smt2", localtime(&t));
+    // string timestampstr =  + ".smt2";
+    // filesystem::copy_file(chcfile, timestampstr);
+    {
+      ifstream  src(chcfile, ios::binary);
+      ofstream  dst(timestampstr, ios::binary);
+      dst << src.rdbuf();
+    }
 
     ExprFactory efac;
     EZ3 z3(efac);
