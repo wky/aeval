@@ -1,10 +1,10 @@
 \begin{align}
 \tuple{\textbf{Cand}} ::=\, & \tuple{\textbf{Ante}} \implies \tuple{\textbf{Conseq}} \\
 \tuple{\textbf{Ante}} ::=\, & \tuple{\textbf{CSpred}} \land \tuple{\textbf{Ante}} \mid \tuple{\textbf{CIpred}} \land \tuple{\textbf{Ante}} \mid true\\
-\tuple{\textbf{CSpred}} ::=\, & \tuple{\textbf{CSvar}} = \tuple{\textbf{Const}} \\
-\tuple{\textbf{CIpred}} ::=\, & \tuple{\textbf{CIvar}} = \tuple{\textbf{Const}} \\
-\tuple{\textbf{Conseq}} ::=\, & \tuple{\textbf{Conj}} \mid \tuple{\textbf{Conj}} \lor \tuple{\textbf{Conseq}} \\
-\tuple{\textbf{Conj}} ::=\, & \tuple{\textbf{COpred}} \land \tuple{\textbf{Conj}} \mid \tuple{\textbf{Dpred}} \land \tuple{\textbf{Conj}} \mid true\\
+\tuple{\textbf{CSpred}} ::=\, & \tuple{\textbf{CSvar}} = \tuple{\textbf{Const}} \mid \tuple{\textbf{CSvar}} \neq \tuple{\textbf{Const}} \\
+\tuple{\textbf{CIpred}} ::=\, & \tuple{\textbf{CIvar}} = \tuple{\textbf{Const}} \mid \tuple{\textbf{CIvar}} \neq \tuple{\textbf{Const}} \\
+\tuple{\textbf{Conseq}} ::=\, & \tuple{\textbf{DConj}} \mid \tuple{\textbf{DConj}} \lor \tuple{\textbf{Conseq}} \\
+\tuple{\textbf{DConj}} ::=\, & \tuple{\textbf{COpred}} \land \tuple{\textbf{DConj}} \mid \tuple{\textbf{Dpred}} \land \tuple{\textbf{DConj}} \mid true\\
 \tuple{\textbf{COpred}} ::=\, & \tuple{\textbf{COvar}} = \tuple{\textbf{Const}} \\
 \tuple{\textbf{Dpred}} ::=\, & \tuple{\textbf{DOvar}} = \tuple{\textbf{Const}} \mid \tuple{\textbf{DOvar}} \neq \tuple{\textbf{Const}} \\
 & \mid \tuple{\textbf{DOvar}} = \tuple{\textbf{DIvar}} \oplus \tuple{\textbf{DIvar}} \notag
