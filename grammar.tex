@@ -1,11 +1,308 @@
+% This is samplepaper.tex, a sample chapter demonstrating the
+% LLNCS macro package for Springer Computer Science proceedings;
+% Version 2.20 of 2017/10/04
+%
+\documentclass[10pt,conference]{article}
+%
+\usepackage{graphicx}
+\usepackage[longend,ruled]{algorithm}
+\usepackage{algorithmic}
+\usepackage{footnote}
+\usepackage{tablefootnote}
+\makesavenoteenv{tabular}
+\makesavenoteenv{table}
+\usepackage{makecell}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{xspace} 
+\usepackage{xcolor}
+\usepackage{filecontents,pgfplots}
+\usepackage[tstt]{backnaur}
+\usepackage{tcolorbox}
+\usepackage{array}
+\usepackage{url}
+
+
+\newcolumntype{Z}{>{\setbox0=\hbox\bgroup}c<{\egroup}@{\hspace*{-\tabcolsep}}}
+
+% \tcbuselibrary{theorems}
+% \definecolor{axiomheadercolor}{gray}{0.95}
+% \definecolor{axiombackcolor}{gray}{0.25}
+% % \newtcbtheorem[number within=section]{axiomdef}{Axiom}
+% \newtcbtheorem{axiomdef}{Axioms}
+% {theorem name,colback=axiomheadercolor,colframe=axiombackcolor,fonttitle=\bfseries}{axiomdef}
+
+% \newtcbtheorem{goaldef}{Goal}
+% {theorem name,colback=axiomheadercolor,colframe=axiombackcolor,fonttitle=\bfseries}{goaldef}
+
+
+\numberwithin{equation}{section}
+
+% \newcommand{\comment}[1]{}
+
+\usepackage{lipsum}
+\usepackage{enumitem}
+\usepackage[ruled,shortend,algo2e]{algorithm2e}
+\newcommand{\tuple}[1]{\langle #1 \rangle}
+
+\begin{document}
+% \setlist[itemize]{noitemsep, topsep=0pt}
+% \setlength{\abovedisplayskip}{-1pt}
+% \setlength{\abovedisplayshortskip}{0pt}
+% \setlength{\belowdisplayskip}{3pt}
+%
+%\title{Automated Induction on Quantified Theorems}
+\title{Invariant Synthesis}
+%
+\pagestyle{plain}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
+\author{Weikun Yang}
+
+
+\maketitle              % typeset the header of the contribution
+
+% \begin{abstract}
+% \end{abstract}
+
+\section{Grammars}
+
+\subsection{Current Implementation}
+
 \begin{align}
-\tuple{\textbf{Cand}} ::=\, & \tuple{\textbf{Ante}} \implies \tuple{\textbf{Conseq}} \\
-\tuple{\textbf{Ante}} ::=\, & \tuple{\textbf{CSpred}} \land \tuple{\textbf{Ante}} \mid \tuple{\textbf{CIpred}} \land \tuple{\textbf{Ante}} \mid true\\
-\tuple{\textbf{CSpred}} ::=\, & \tuple{\textbf{CSvar}} = \tuple{\textbf{Const}} \mid \tuple{\textbf{CSvar}} \neq \tuple{\textbf{Const}} \\
-\tuple{\textbf{CIpred}} ::=\, & \tuple{\textbf{CIvar}} = \tuple{\textbf{Const}} \mid \tuple{\textbf{CIvar}} \neq \tuple{\textbf{Const}} \\
-\tuple{\textbf{Conseq}} ::=\, & \tuple{\textbf{DConj}} \mid \tuple{\textbf{DConj}} \lor \tuple{\textbf{Conseq}} \\
-\tuple{\textbf{DConj}} ::=\, & \tuple{\textbf{COpred}} \land \tuple{\textbf{DConj}} \mid \tuple{\textbf{Dpred}} \land \tuple{\textbf{DConj}} \mid true\\
-\tuple{\textbf{COpred}} ::=\, & \tuple{\textbf{COvar}} = \tuple{\textbf{Const}} \\
-\tuple{\textbf{Dpred}} ::=\, & \tuple{\textbf{DOvar}} = \tuple{\textbf{Const}} \mid \tuple{\textbf{DOvar}} \neq \tuple{\textbf{Const}} \\
-& \mid \tuple{\textbf{DOvar}} = \tuple{\textbf{DIvar}} \oplus \tuple{\textbf{DIvar}} \notag
+\tuple{\texttt{Cand}} ::=\, & \tuple{\texttt{Ante}} \implies \tuple{\texttt{Conseq}} \\
+\tuple{\texttt{Ante}} ::=\, & \tuple{\texttt{CSpred}} \land \tuple{\texttt{Ante}} \mid true\\
+\tuple{\texttt{CSpred}} ::=\, & \tuple{\texttt{CSvar}} = \tuple{\texttt{Const}} \mid \tuple{\texttt{CSvar}} \neq \tuple{\texttt{Const}} \\
+% \tuple{\texttt{CIpred}} ::=\, & \tuple{\texttt{CIvar}} = \tuple{\texttt{Const}} \mid \tuple{\texttt{CIvar}} \neq \tuple{\texttt{Const}} \\
+\tuple{\texttt{Conseq}} ::=\, & \tuple{\texttt{Dconj}} \mid \tuple{\texttt{Dconj}} \lor \tuple{\texttt{Conseq}} \\
+\tuple{\texttt{Dconj}} ::=\, & \tuple{\texttt{COpred}} \land \tuple{\texttt{Dconj}} \mid \tuple{\texttt{Dpred}} \land \tuple{\texttt{Dconj}} \mid true\\
+\tuple{\texttt{COpred}} ::=\, & \tuple{\texttt{COvar}} = \tuple{\texttt{Const}} \mid \tuple{\texttt{COvar}} \neq \tuple{\texttt{Const}}\\
+\tuple{\texttt{Dpred}} ::=\, & \tuple{\texttt{DOvar}} = \tuple{\texttt{Const}} \mid \tuple{\texttt{DOvar}} \neq \tuple{\texttt{Const}} \\
+& \mid \tuple{\texttt{DOvar}} = \tuple{\texttt{DIvar}} \oplus \tuple{\texttt{DIvar}} \notag
 \end{align}
+
+Grammar parameters:
+
+\begin{enumerate}
+\item Variable categories:
+  \begin{enumerate}
+    \item \texttt{CSvar} control state
+    % \item \texttt{CIvar} control input
+    \item \texttt{COvar} control output
+    \item \texttt{DIvar} data input
+    \item \texttt{DOvar} data output
+  \end{enumerate}
+\item Size of \texttt{Ante}: number of predicates conjunction.
+\item Bit-width of \texttt{Const}.
+\item Size of \texttt{Conseq}: number of predicates in disjunction.
+\item Size of \texttt{Dconj}: number of predicates in conjunction.
+\item Supported bit-vector operations in \texttt{Dpred}: bv-add, bv-and, bv-neg etc.
+\end{enumerate}
+
+
+
+\subsection{Grammar with Variable Groups}
+
+\begin{align}
+\tuple{\texttt{Cand}} ::=\, & \tuple{\texttt{Ante}} \implies \tuple{\texttt{Conseq}} \\
+\tuple{\texttt{Ante}} ::=\, & \tuple{\texttt{Cpred}} \land \tuple{\texttt{Ante}} \mid true\\
+\tuple{\texttt{Cpred}} ::=\, & \tuple{\texttt{Cvar}} = \tuple{\texttt{Const}} \mid \tuple{\texttt{Cvar}} \neq \tuple{\texttt{Const}} \\
+\tuple{\texttt{Conseq}} ::=\, & \tuple{\texttt{Group}}  \land \tuple{\texttt{Group}} \mid \tuple{\texttt{Group}} \lor \tuple{\texttt{Group}} \\
+\tuple{\texttt{Group}} ::=\, & \tuple{\texttt{Dpred}} \land \tuple{\texttt{Dpred}} \mid \tuple{\texttt{Dpred}} \lor \tuple{\texttt{Dpred}} \\
+\tuple{\texttt{Dpred}} ::=\, & \tuple{\texttt{Dvar}} = \tuple{\texttt{Const}} \mid \tuple{\texttt{Dvar}} \neq \tuple{\texttt{Const}}
+\end{align}
+
+
+\section{Pseudo-code for Term Enumeration}
+
+\subsection{Current Implementation}
+
+Main function: \texttt{EnumerateCandidates}.
+
+\begin{figure}[!h]
+  \begin{algorithm2e}[H]
+  \SetKwFor{ForEach}{for each}{do}{end}
+
+  \SetKw{Continue}{continue}
+  \SetKw{Break}{break}
+  \SetKw{In}{in}
+  \SetKw{Yield}{yield}
+  \SetKw{Load}{load}
+  \SetKw{Global}{global}
+  
+  \SetKwProg{Fn}{function}{:}{end}
+  
+  \SetKwFunction{EnumCandFn}{EnumerateCandidates}
+  \SetKwFunction{EnumPredFn}{EnumeratePredicates}
+  \SetKwFunction{EnumOperFn}{EnumerateOperations}
+  \SetKwFunction{EnumSelectKFn}{EnumerateSelectK}
+  
+  % \DontPrintSemicolon
+  % \SetAlgoVlined
+  \LinesNumbered
+  % \KwIn{$Goal$: quantified formula to be proved, $Assumptions$: set of formulas}
+  % \KwOut{$result \in \{\textsc{QED}, \textsc{Unknown}\}$}
+  
+
+  \Fn{\EnumCandFn{$CSvars$, $COvars$, $DIvars$, $DOvars$}}{
+  	\Load $AnteSize, ConseqSize, DconjSize, BVOPs, MAXbw$
+  	\Global $PredMap \gets \texttt{EmptyMap}$ \\
+  	\EnumPredFn{$CSvars$, $MAXbw$} \\
+  	\EnumPredFn{$COvars$, $MAXbw$} \\
+  	\EnumPredFn{$DOvars$, $MAXbw$} \\
+  	\EnumOperFn{$DOvars$, $BVOPs$, $DIvars$} \\
+  	$SetofAnte \gets \EnumSelectKFn{CSvars, AnteSize}$ \\
+  	$DconjVars \gets COvars \cup DOvars$\\
+  	$SetofDconj \gets \EnumSelectKFn{DconjVars, DconjSize}$ \\
+  	$SetofConseq \gets \texttt{EmptySet}$ \\
+  	\ForEach{$\{c_1, c_2, ..., c_{ConseqSize}\} \in 2^{SetofDconj}$}{
+  		$SetofConseq \gets SetofConseq \cup \{ \bigvee_{i=1}^{ConseqSize}{c_i} \}$\\
+  	}
+  	\ForEach{$(Ante, Conseq) \in SetofAnte \times SetofConseq$}{
+  		\Yield ``$Ante \implies Conseq$''
+  	}
+  }
+  
+  \BlankLine
+  
+  \caption{\textsc{Enumerate Invariant Candidates}}
+  \label{fig:enum-algo1}
+  \end{algorithm2e}
+\end{figure}
+
+
+\begin{figure}[!h]
+  \begin{algorithm2e}[H]
+  \SetKwFor{ForEach}{for each}{do}{end}
+
+  \SetKw{Continue}{continue}
+  \SetKw{Break}{break}
+  \SetKw{In}{in}
+  \SetKw{Yield}{yield}
+  \SetKw{Load}{load}
+  \SetKw{Global}{global}
+  
+  \SetKwProg{Fn}{function}{:}{end}
+  
+  \SetKwFunction{EnumCandFn}{EnumerateCandidates}
+  \SetKwFunction{EnumPredFn}{EnumeratePredicates}
+  \SetKwFunction{EnumOperFn}{EnumerateOperations}
+  \SetKwFunction{EnumSelectKFn}{EnumerateSelectK}
+  
+  % \DontPrintSemicolon
+  % \SetAlgoVlined
+  \LinesNumbered
+  % \KwIn{$Goal$: quantified formula to be proved, $Assumptions$: set of formulas}
+  % \KwOut{$result \in \{\textsc{QED}, \textsc{Unknown}\}$}
+  
+  \Fn{\EnumPredFn{$Vars$, $MAXbw$}}{
+  	\ForEach{$V \in Vars$}{
+  		$PredSet \gets \texttt{EmptySet}$ \\
+  		$B \gets \texttt{min}(MAXbw, \texttt{getBW}(V)) $\\
+  		\ForEach{$C$ \In $0, 1, ... 2^B-1$}{
+  			$PredSet \gets PredSet \cup \{V=C, V \neq C\}$ \\
+  		}
+  		$PredMap[V] \gets PredMap[V] \cup PredSet$ \\
+  	}
+  }
+  \BlankLine
+  
+  \Fn{\EnumOperFn{$Vars$, $Operators$, $Operands$}}{
+  	\ForEach{$V$ \In $Vars$}{
+  		$PredSet \gets \texttt{EmptySet}$ \\
+  		\ForEach{$OP \in Operators$}{
+  			$N \gets \texttt{arity}(OP)$ \\
+  			\ForEach{$\{o_1, o_2, ..., o_N\} \in 2^{Operands}$}{
+  				$PredSet \gets PredSet \cup \{V=OP(o_1, o_2, ..., o_N)\}$ \\
+  			}
+  		}
+  		$PredMap[V] \gets PredMap[V] \cup PredSet$ \\
+  	}	
+  }
+  \BlankLine
+
+  \Fn{\EnumSelectKFn{$Vars$, $K$}}{
+  	% $Vars \gets \texttt{getKeys}(PredMap)$\\
+  	\ForEach{$\{V_1, V_2, ..., V_n\} \in 2^{Vars}$ where $n \leq K$}{
+  		$XProdSet \gets PredMap[V_1] \times PredMap[V_2] \times ... \times PredMap[V_n]$ \\
+  		\ForEach{$(pred_1, pred_2 ..., pred_n) \in XProdSet$}{
+  			\Yield $\bigwedge_{i=1}^n{pred_i}$
+  		}
+  	}
+  }
+
+  \BlankLine
+  
+  \caption{\textsc{Helper Functions}}
+  \label{fig:enum-algo2}
+  \end{algorithm2e}
+\end{figure}
+
+\subsection{Variable Groups}
+
+
+\begin{figure}[!t]
+  \begin{algorithm2e}[H]
+  \SetKwFor{ForEach}{for each}{do}{end}
+
+  \SetKw{Continue}{continue}
+  \SetKw{Break}{break}
+  \SetKw{In}{in}
+  \SetKw{Yield}{yield}
+  \SetKw{Load}{load}
+  \SetKw{Global}{global}
+  
+  \SetKwProg{Fn}{function}{:}{end}
+  
+  \SetKwFunction{EnumSelectGroupFn}{EnumerateSelectGroups}
+  
+  % \DontPrintSemicolon
+  % \SetAlgoVlined
+  \LinesNumbered
+  % \KwIn{$Goal$: quantified formula to be proved, $Assumptions$: set of formulas}
+  % \KwOut{$result \in \{\textsc{QED}, \textsc{Unknown}\}$}
+  \Fn{\EnumCandFn{$Cvars$, $Dvars$, $Groups$}}{
+  	\Load $AnteSize=1, MAXbw$
+  	\Global $PredMap \gets \texttt{EmptyMap}$ \\
+  	\EnumPredFn{$Cvars$, $MAXbw$} \\
+  	\EnumPredFn{$Dvars$, $MAXbw$} \\
+  	
+  	$SetofAnte \gets \EnumSelectKFn{Cvars, AnteSize}$ \\
+
+  	$GroupPreds \gets \EnumSelectGroupFn{Groups, ``CONJ''}$ \\
+  	$GroupPreds \gets \EnumSelectGroupFn{Groups, ``DISJ''}$ \\
+  	
+  	$SetofConseq \gets \texttt{EmptySet}$ \\
+  	\ForEach{$\{c_1, c_2\} \in 2^{GroupPreds}$}{
+  		$SetofConseq \gets SetofConseq \cup \{ c_1 \land c_2, c_1 \lor c_2 \}$\\
+  	}
+  	\ForEach{$(Ante, Conseq) \in SetofAnte \times SetofConseq$}{
+  		\Yield ``$Ante \implies Conseq$''
+  	}
+  }  
+
+  \Fn{\EnumSelectGroupFn{$Groups$, $Connective$}}{
+  	% $Vars \gets \texttt{getKeys}(PredMap)$\\
+  	\ForEach{$\{V_1, V_2, ..., V_n\} \in Groups$}{
+  		$XProdSet \gets PredMap[V_1] \times PredMap[V_2] \times ... \times PredMap[V_n]$ \\
+  		\ForEach{$(pred_1, pred_2 ..., pred_n) \in XProdSet$}{
+  			\If{Connective = ``CONJ''}{
+  				\Yield $\bigwedge_{i=1}^n{pred_i}$
+  			}\ElseIf{Connective = ``DISJ''}{
+  				\Yield $\bigvee_{i=1}^n{pred_i}$
+  			}
+  		}
+  	}
+  }
+
+  \BlankLine
+  
+  \caption{\textsc{Enumerate Select (Grouped Variables)}}
+  \label{fig:enum-algo3}
+  \end{algorithm2e}
+\end{figure}
+
+
+\end{document}
+
