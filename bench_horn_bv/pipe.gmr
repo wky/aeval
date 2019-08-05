@@ -1,0 +1,5 @@
+CTRL-STATE: S_m1.reg_0_w_stage, S_m1.reg_1_w_stage, S_m1.reg_2_w_stage, S_m1.reg_3_w_stage
+CTRL-OUT: S_m1.id_ex_reg_wen, S_m1.ex_wb_reg_wen 
+DATA-OUT: S_m1.id_ex_rd, S_m1.ex_wb_rd
+VAR-GROUP: S_m1.id_ex_reg_wen, S_m1.id_ex_rd
+VAR-GROUP: S_m1.ex_wb_reg_wen, S_m1.ex_wb_rd

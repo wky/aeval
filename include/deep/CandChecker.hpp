@@ -166,8 +166,10 @@ namespace ufo
       for (unsigned i = 0; i < (1ul<<bw); i++){
         Expr pred = mk<EQ>(ev, bv::bvnum(i, bw, v->efac()));
         preds.push_back(pred);
-        pred = mk<NEQ>(ev, bv::bvnum(i, bw, v->efac()));
-        preds.push_back(pred);
+        if (bw > 1){
+          pred = mk<NEQ>(ev, bv::bvnum(i, bw, v->efac()));
+          preds.push_back(pred);
+        }
       }
       lol.push_back(preds);
     }
@@ -184,6 +186,10 @@ namespace ufo
       for (unsigned i = 0; i < (1ul<<bw); i++){
         Expr pred = mk<EQ>(ev, bv::bvnum(i, bw, v->efac()));
         preds.push_back(pred);
+        if (bw > 1){
+          pred = mk<NEQ>(ev, bv::bvnum(i, bw, v->efac()));
+          preds.push_back(pred);
+        }
       }
       // X = Y
       bw = bv::width(v->first()->arg(1));
@@ -289,7 +295,8 @@ namespace ufo
   inline void invSynth(int argc, char** argv){
     static struct option long_options[] = {
         {"chc-file",    required_argument, NULL,  'F'},
-        {"grammar-file", required_argument, NULL, 'G'},
+        {"grammar-file",required_argument, NULL, 'G'},
+        {"group",       required_argument, NULL, 'g'},
         {"ctrl-state",  required_argument, NULL,  'S'},
         {"ctrl-input",  required_argument, NULL,  'I'},
         {"ctrl-output", required_argument, NULL,  'O'},
@@ -307,16 +314,17 @@ namespace ufo
       };
     int c;
     string CSnames, CInames, COnames, DInames, DOnames;
-    
+    vector<string> GroupNames;
+
     unsigned BW_bound = 2;
     int ANTE_Size = 1;
     int CONSEQ_ConjSize = 2;
     int CONSEQ_DisjSize = 1;
 
-    char *chcfile, *gfile;
+    char *chcfile= nullptr, *gfile = nullptr;
     while(1) {
       int opt_idx;
-      c = getopt_long(argc, argv, "S:I:O:i:o:B:A:C:D:", long_options, &opt_idx);
+      c = getopt_long(argc, argv, "F:G:g:S:I:O:i:o:B:A:C:D:", long_options, &opt_idx);
       if (c == -1) break; // done
 
       switch(c){
@@ -327,6 +335,9 @@ namespace ufo
           break;
         case 'G':
           gfile = optarg;
+          break;
+        case 'g':
+          GroupNames.push_back(string(optarg));
           break;
         case 'S':
           CSnames = optarg;
@@ -374,6 +385,22 @@ namespace ufo
       dst << src.rdbuf();
     }
 
+    if (gfile)
+    {
+      string buf;
+      ifstream gf(gfile);
+      while (gf.good())
+      {
+        getline(gf, buf);
+        if (buf.substr(0, 12) == "CTRL-STATE: ") CSnames += buf.substr(12);
+        else if (buf.substr(0, 9) == "CTRL-IN: ") CInames += buf.substr(9);
+        else if (buf.substr(0, 10) == "CTRL-OUT: ") COnames += buf.substr(10);
+        else if (buf.substr(0, 9) == "DATA-IN: ") DInames += buf.substr(9);
+        else if (buf.substr(0, 10) == "DATA-OUT: ") DOnames += buf.substr(10);
+        else if (buf.substr(0, 11) == "VAR-GROUP: ") GroupNames.push_back(buf.substr(11));
+      }
+    }
+
     ExprFactory efac;
     EZ3 z3(efac);
     CHCs ruleManager(efac, z3);
@@ -394,7 +421,7 @@ namespace ufo
     ExprVector cands;
 
     ExprVector CSvars, CIvars, COvars, DIvars, DOvars;
-
+    vector<ExprVector> GroupedVars(GroupNames.size());
     for (auto & a: tr->srcVars)
     {
       if (!bv::is_bvconst(a)) continue;
@@ -425,6 +452,11 @@ namespace ufo
         cout<<" DATA-OUT";
       }
       cout<<"\n";
+
+      for (int i = 0; i < GroupNames.size(); ++i)
+        if (GroupNames[i].find(vlgName) != -1)
+          GroupedVars[i].push_back(a);
+
     }
 
 
@@ -444,30 +476,53 @@ namespace ufo
 
 
     ExprVector Conseq;
-    ExprVector DataConj;
+    
 
     vector<ExprVector> DpredList;
 
     enumConstPredForEachVar(COvars, BW_bound, DpredList);
     enumDataPredForEachVar(DOvars, BW_bound, DIvars, DpredList);
 
-    enumSelectKFromListofList(DpredList, CONSEQ_ConjSize, DataConj, OP_CONJ);
+    if (GroupedVars.size())
+    {
+      vector<ExprVector> clauses(GroupedVars.size());
 
+      for (int i = 0; i < GroupedVars.size(); i++)
+      {        
+        ExprVector selection;
+        vector<int> idx_list;
+        for (int j = 0; j < GroupedVars[i].size(); j++){
+          Expr v = GroupedVars[i][j];
+          int idx = find(COvars.begin(), COvars.end(), v) - COvars.begin();
+          if (idx == COvars.size()) {
+            idx = find(DOvars.begin(), DOvars.end(), v) - DOvars.begin();
+            assert(idx != DOvars.size() && "grouped vars must be from ctrl-out or data-out");
+            idx += COvars.size();
+          }
+          idx_list.push_back(idx);
+        }
+        enumSelectFromLoLImplPart2(DpredList, 0, idx_list, selection, clauses[i], OP_CONJ);
+        enumSelectFromLoLImplPart2(DpredList, 0, idx_list, selection, clauses[i], OP_DISJ);
 
-    cnt = 0;
-    for (Expr e : DataConj){
-      cnt++;
-      cout<<"Enumerated Dconj #"<<cnt<<" :"<<cc.printExpr(e)<<"\n";
+        // enumSelectFromLoLImplPart2(DpredList, 0, idx_list, selection, Conseq, OP_CONJ);
+        // enumSelectFromLoLImplPart2(DpredList, 0, idx_list, selection, Conseq, OP_DISJ);
+      }
+      enumSelectKFromListofList(clauses, clauses.size(), Conseq, OP_CONJ);
+    }
+    else
+    {
+      ExprVector DataConj;
+      enumSelectKFromListofList(DpredList, CONSEQ_ConjSize, DataConj, OP_CONJ);
+
+      cnt = 0;
+      for (Expr e : DataConj){
+        cnt++;
+        cout<<"Enumerated Dconj #"<<cnt<<" :"<<cc.printExpr(e)<<"\n";
+      }
+
+      enumSelectKFromList(DataConj, CONSEQ_DisjSize, Conseq, OP_DISJ);
     }
 
-    enumSelectKFromList(DataConj, CONSEQ_DisjSize, Conseq, OP_DISJ);
-
-
-    // cnt = 0;
-    // for (Expr e : Conseq){
-    //   cnt++;
-    //   cout<<"Enumerated Conseq #"<<cnt<<" :"<<cc.printExpr(e)<<"\n";
-    // }
 
     for (Expr a : Ante)
       for (Expr b: Conseq)
