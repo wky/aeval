@@ -108,11 +108,12 @@ Grammar parameters:
 \tuple{\texttt{Cand}} ::=\, & \tuple{\texttt{Ante}} \implies \tuple{\texttt{Conseq}} \\
 \tuple{\texttt{Ante}} ::=\, & \tuple{\texttt{Cpred}} \land \tuple{\texttt{Ante}} \mid true\\
 \tuple{\texttt{Cpred}} ::=\, & \tuple{\texttt{Cvar}} = \tuple{\texttt{Const}} \mid \tuple{\texttt{Cvar}} \neq \tuple{\texttt{Const}} \\
-\tuple{\texttt{Conseq}} ::=\, & \tuple{\texttt{Group}}  \land \tuple{\texttt{Group}} \mid \tuple{\texttt{Group}} \lor \tuple{\texttt{Group}} \\
-\tuple{\texttt{Group}} ::=\, & \tuple{\texttt{Dpred}} \land \tuple{\texttt{Dpred}} \mid \tuple{\texttt{Dpred}} \lor \tuple{\texttt{Dpred}} \\
+\tuple{\texttt{Conseq}} ::=\, & \tuple{\texttt{Group_1}}  \land \tuple{\texttt{Group_2}} \land \tuple{\texttt{...}} \\
+\tuple{\texttt{Group_i}} ::=\, & \tuple{\texttt{Dpred_{i1}}} \land \tuple{\texttt{Dpred_{i2}}} \mid \tuple{\texttt{Dpred_{i1}}} \lor \tuple{\texttt{Dpred_{i2}}} \\
 \tuple{\texttt{Dpred}} ::=\, & \tuple{\texttt{Dvar}} = \tuple{\texttt{Const}} \mid \tuple{\texttt{Dvar}} \neq \tuple{\texttt{Const}}
 \end{align}
 
+Grouped variables: \texttt{Dpred_{i1}} and \texttt{Dpred_{i2}} must use variables from the same group.
 
 \section{Pseudo-code for Term Enumeration}
 

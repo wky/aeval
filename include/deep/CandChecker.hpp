@@ -42,7 +42,8 @@ namespace ufo
         assert (tr->dstVars[i] == fc->dstVars[i]);
     }
 
-    Expr getModel(ExprVector& vars)
+    // Expr getModel(ExprVector& vars)
+    Expr getModel()
     {
       // used to explain the reason why some of the check failed
       // i.e., it is supposed to be called after "smt_solver.solve()" returned SAT
@@ -91,12 +92,27 @@ namespace ufo
       smt_solver.assertExpr (getlearnedLemmas()); // IMPORTANT: use all lemmas learned so far
       smt_solver.assertExpr (mk<NEG>(candPrime));
 
+      // cout<<"*************begin IND check**************\n";
+      // smt_solver.toSmtLib(cout);
+      // cout<<"*************end IND check**************\n";
+
       bool res = !smt_solver.solve ();
       if (res) learnedExprs.insert (cand);  // inductiveness check passed; so add a new lemma
 
       return res;
     }
+    
+    bool checkBlockCTI(Expr model)
+    {
+      // supposed to be called after checkInductiveness
+      // but it does not take a candidate as input since it is already in learnedExprs
 
+      smt_solver.reset();
+      smt_solver.assertExpr (model);
+      smt_solver.assertExpr (getlearnedLemmas());
+
+      return !smt_solver.solve ();
+    }
     bool checkSafety()
     {
       // supposed to be called after checkInductiveness
@@ -385,6 +401,7 @@ namespace ufo
       dst << src.rdbuf();
     }
 
+    vector<string> ConseqPredNames, AntePredNames;
     if (gfile)
     {
       string buf;
@@ -398,6 +415,8 @@ namespace ufo
         else if (buf.substr(0, 9) == "DATA-IN: ") DInames += buf.substr(9);
         else if (buf.substr(0, 10) == "DATA-OUT: ") DOnames += buf.substr(10);
         else if (buf.substr(0, 11) == "VAR-GROUP: ") GroupNames.push_back(buf.substr(11));
+        else if (buf.substr(0, 11) == "CONS-PRED: ") ConseqPredNames.push_back(buf.substr(11));
+        else if (buf.substr(0, 11) == "ANTE-PRED: ") AntePredNames.push_back(buf.substr(11));
       }
     }
 
@@ -424,7 +443,11 @@ namespace ufo
     vector<ExprVector> GroupedVars(GroupNames.size());
     for (auto & a: tr->srcVars)
     {
-      if (!bv::is_bvconst(a)) continue;
+      if (!bv::is_bvconst(a)) 
+      {
+        cout<<"not a bv var: "<<*a<<" name: "<<*qr->origNames[a]<<" \n";
+          continue;
+      }
 
       std::stringstream sbuf;
       sbuf << *qr->origNames[a];
@@ -458,7 +481,7 @@ namespace ufo
           GroupedVars[i].push_back(a);
 
     }
-
+    // return;
 
     vector<ExprVector> CSpredList; // {cs1: [cs1=0, cs1=1 , cs1=2 ...], cs2: [cs2=0, cs2=1 ...]}
     enumConstPredForEachVar(CSvars, BW_bound, CSpredList);
@@ -501,13 +524,13 @@ namespace ufo
           }
           idx_list.push_back(idx);
         }
-        enumSelectFromLoLImplPart2(DpredList, 0, idx_list, selection, clauses[i], OP_CONJ);
-        enumSelectFromLoLImplPart2(DpredList, 0, idx_list, selection, clauses[i], OP_DISJ);
+        // enumSelectFromLoLImplPart2(DpredList, 0, idx_list, selection, clauses[i], OP_CONJ);
+        // enumSelectFromLoLImplPart2(DpredList, 0, idx_list, selection, clauses[i], OP_DISJ);
 
-        // enumSelectFromLoLImplPart2(DpredList, 0, idx_list, selection, Conseq, OP_CONJ);
-        // enumSelectFromLoLImplPart2(DpredList, 0, idx_list, selection, Conseq, OP_DISJ);
+        enumSelectFromLoLImplPart2(DpredList, 0, idx_list, selection, Conseq, OP_CONJ);
+        enumSelectFromLoLImplPart2(DpredList, 0, idx_list, selection, Conseq, OP_DISJ);
       }
-      enumSelectKFromListofList(clauses, clauses.size(), Conseq, OP_CONJ);
+      // enumSelectKFromListofList(clauses, clauses.size(), Conseq, OP_CONJ);
     }
     else
     {
@@ -530,15 +553,28 @@ namespace ufo
 
     cout<<"=== TOTAL candidates: "<<cands.size()<<"\n";
     // return;
-
+    // counterexample to induction -> list of candidates 
+    map<Expr, ExprVector> CTImap;
     int iter = 0;
+    int indfailcnt = 0;
     for (auto & cand : cands)
     {
       iter++;
-      cout<<"Testing Candidate: "<<cc.printExpr(cand)<<"\n";
-      if (cc.checkInitiation(cand) &&
-          cc.checkInductiveness(cand) &&
-          cc.checkSafety())
+      cout<<"Testing Candidate: "<<cc.printExpr(cand);
+
+      if (!cc.checkInitiation(cand)) {
+        cout<<" xx fail \n";
+        continue;
+      }
+      if (!cc.checkInductiveness(cand)){
+        Expr cti = cc.getModel();
+        CTImap[cti].push_back(cand);
+        cout<<"*** Found CTI \n";
+        indfailcnt++;
+        continue;
+      }
+      cout<<"+++ ind check pass\n";
+      if (cc.checkSafety())
       {
         outs () << "proved\n";
         outs () << "iter: " << iter << " / " << cands.size() << "\n";
@@ -546,7 +582,29 @@ namespace ufo
         return;
       }
     }
+    cout<<" Found CTIs # "<<CTImap.size()<<" covering # "<<indfailcnt<< "candidates\n";
+    while (1){
+      ExprVector toRemove;
+      for (auto& iter: CTImap){
+        if (cc.checkBlockCTI(iter.first)){
+          cout<<"new CTI blocked\n";
+          if (cc.checkInductiveness(conjoin(iter.second, efac))){
+            toRemove.push_back(iter.first);
+            cout<<"new cands added\n";
+            if (cc.checkSafety()){
+              cout<<"proved\n";
+              cc.serializeInvars();
+              return;
+            }
+          }
+        }
+      }
+      if (toRemove.empty()) break; // fail to change anything
+
+      for (Expr e: toRemove) CTImap.erase(e);
+    }
     outs () << "unknown\n";
+
 
   }
   /*

@@ -2,3 +2,5 @@ CTRL-STATE: S_m1.aes_reg_state
 CTRL-OUT: S_m1.byte_counter 
 DATA-OUT: S_m1.uaes_ctr, S_m1.block_counter
 DATA-IN: S_m1.aes_reg_ctr_i.reg_out, S_m1.block_counter, S_m1.operated_bytes_count
+CONS-PRED: |w_n m1.aes_time_enough|
+ANTE-PRED: |w_n m1.aes_step|
