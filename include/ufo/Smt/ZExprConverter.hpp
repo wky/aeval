@@ -766,6 +766,9 @@ namespace ufo
 	case Z3_OP_EQ:
 	  e =  mknary<EQ> (args.begin(), args.end());
 	  break;
+  case Z3_OP_DISTINCT:
+    e = mknary<NEQ> (args.begin(), args.end());
+    break;
 	case Z3_OP_LT:
 	  e =  mknary<LT> (args.begin(), args.end());
 	  break;
