@@ -277,7 +277,7 @@ namespace ufo
       enumSelectFromLoLImplPart2(lol, 0, list_selection, selection, output, op);
       return;
     }
-    for (int i = start; i <= lol.size() - k; ++i) {
+    for (int i = start; i <= ( (signed long long)(lol.size()) - k ); ++i) {
       list_selection.push_back(i);
       enumSelectFromLoLImpl(lol, i+1, k-1, list_selection, output, op);
       list_selection.pop_back();
@@ -295,7 +295,7 @@ namespace ufo
       output.push_back(combineListExpr(selection, op));
       return;
     }
-    for (int i = start; i <= list.size() - k; ++i) {
+    for (int i = start; i <= (signed long long)(list.size()) - k; ++i) {
       selection.push_back(list[i]);
       enumSelectFromListImpl(list, i+1, k-1, selection, output, op);
       selection.pop_back();
